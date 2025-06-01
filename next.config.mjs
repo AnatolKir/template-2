@@ -24,13 +24,18 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: "https://api.openai.com/:path*",
-      },
-    ];
+  // Improve development performance
+  reactStrictMode: true,
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  env: {
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  },
+  experimental: {
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'localhost:3002'],
+    },
   },
 };
 

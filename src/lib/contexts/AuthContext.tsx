@@ -24,28 +24,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      setUser(user);
-      setLoading(false);
-    });
+    let mounted = true;
 
-    return () => unsubscribe();
+    const unsubscribe = auth.onAuthStateChanged(
+      (user) => {
+        if (mounted) {
+          console.log("Auth state changed:", user?.email);
+          setUser(user);
+          setLoading(false);
+        }
+      },
+      (error) => {
+        console.error("Auth state change error:", error);
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    );
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = async () => {
-    const provider = new GoogleAuthProvider();
     try {
-      await signInWithPopup(auth, provider);
-    } catch (error) {
-      console.error("Error signing in with Google", error);
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      console.log("Starting Google sign-in...");
+      const result = await signInWithPopup(auth, provider);
+      console.log("Sign-in successful:", result.user.email);
+    } catch (error: any) {
+      console.error("Sign-in error:", error);
+      if (error.code === 'auth/popup-closed-by-user') {
+        throw new Error('Sign-in was cancelled');
+      } else if (error.code === 'auth/popup-blocked') {
+        throw new Error('Sign-in popup was blocked by your browser');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        throw new Error('This domain is not authorized for sign-in');
+      }
+      throw error;
     }
   };
 
   const signOutUser = async () => {
     try {
       await firebaseSignOut(auth);
+      console.log("Successfully signed out");
     } catch (error) {
-      console.error("Error signing out", error);
+      console.error("Error signing out:", error);
+      throw error;
     }
   };
 
