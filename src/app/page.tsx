@@ -74,6 +74,7 @@ export default function Home() {
               Sign Out
             </button>
           </div>
+          <p className="text-xl text-gray-800 mb-4">Hello World!</p>
           <MarkdownEditor />
         </div>
       </main>
